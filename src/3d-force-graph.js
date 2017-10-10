@@ -2,6 +2,7 @@ import './3d-force-graph.css';
 
 import './threeGlobal';
 import 'three/examples/js/controls/TrackBallControls';
+import './ColladaLoader';
 
 import * as d3 from 'd3-force-3d';
 import graph from 'ngraph.graph';
@@ -9,43 +10,63 @@ import forcelayout from 'ngraph.forcelayout';
 import forcelayout3d from 'ngraph.forcelayout3d';
 const ngraph = { graph, forcelayout, forcelayout3d };
 
+
+// A Simple Web Component library, inspired by the reusable charts pattern commonly found in D3 components.
 import Kapsule from 'kapsule';
 
 //
 
 const CAMERA_DISTANCE2NODES_FACTOR = 150;
 
+
+// The config object passed to Kapsule supports 5 properties: props, methods, stateInit, init and update.
+		// All of these are optional and not required for the component to work, however calling Kapsule({}) generates
+		// a dumb component that has no functionality nor interaction.
 export default Kapsule({
 
+	// props: { propName: propConfig, ... }
+			// Each registered prop inside props will declare its own getter/setter method in the component's instance state.
+			// This method will have the signature: myInstance.propName([propVal]).
+
+			// If called without an argument, the method will function as a getter, returning the current value of the prop.
+			// If called with a value it will act as a setter, setting the value in the component's internal state,
+			// and returning the component's instance for convenience of method chaining.
 	props: {
-		width: { default: window.innerWidth },
-		height: { default: window.innerHeight },
-		jsonUrl: {},
+		width: { default: window.innerWidth },		// Getter/setter for the canvas width.
+		height: { default: window.innerHeight },	// Getter/setter for the canvas height.
+		jsonUrl: {},															// URL of JSON file to load graph data directly from, as an alternative to specifying graphData directly
 		graphData: {
 			default: {
 				nodes: [],
 				links: []
 			},
 			onChange(_, state) { state.onFrame = null; } // Pause simulation
-		},
-		numDimensions: { default: 3 },
-		nodeRelSize: { default: 4 }, // volume per val unit
-		nodeResolution: { default: 8 }, // how many slice segments in the sphere's circumference
-		onNodeClick: {},
-		lineOpacity: { default: 0.2 },
-		autoColorBy: {},
-		idField: { default: 'id' },
-		valField: { default: 'val' },
-		nameField: { default: 'name' },
-		colorField: { default: 'color' },
-		linkSourceField: { default: 'source' },
-		linkTargetField: { default: 'target' },
-		forceEngine: { default: 'd3' }, // d3 or ngraph
-		warmupTicks: { default: 0 }, // how many times to tick the force engine at init before starting to render
-		cooldownTicks: { default: Infinity },
-		cooldownTime: { default: 15000 } // ms
+		},																				// Getter/setter for graph data structure (see below for syntax details). Can also be used to apply incremental updates.
+		numDimensions: { default: 3 },						// Getter/setter for number of dimensions to run the force simulation on (1, 2 or 3).
+		nodeRelSize: { default: 4 }, 							// volume per val unit
+		nodeResolution: { default: 8 }, 					// how many slice segments in the sphere's circumference
+		onNodeClick: {},													// Callback function for node clicks. The node object is included as single argument onNodeClick(node)
+		lineOpacity: { default: 0.2 },						// Getter/setter for line opacity of links, between [0,1].
+		autoColorBy: {},													// Node object accessor attribute to automatically group colors by, only affects nodes without a color attribute.
+		idField: { default: 'id' },								// Node object accessor attribute for unique node id (used in link objects source/target).
+		valField: { default: 'val' },							// Node object accessor attribute for node numeric value (affects sphere volume).
+		nameField: { default: 'name' },						// Node object accessor attribute for name (shown in label).
+		colorField: { default: 'color' },					// Node object accessor attribute for node color (affects sphere color)
+		linkSourceField: { default: 'source' },		// Link object accessor attribute referring to id of source node.
+		linkTargetField: { default: 'target' },		// Link object accessor attribute referring to id of target node.
+		forceEngine: { default: 'd3' }, 					// Getter/setter for which force-simulation engine to use (d3 or ngraph).
+		warmupTicks: { default: 0 }, 							// Getter/setter for number of layout engine cycles to dry-run at ignition before starting to render. how many times to tick the force engine at init before starting to render
+		cooldownTicks: { default: Infinity },			// Getter/setter for how many build-in frames to render before stopping and freezing the layout engine.
+		cooldownTime: { default: 15000 } 					// Getter/setter for how long (ms) to render for before stopping and freezing the layout engine.
 	},
 
+
+	// init(domNode, state, componentOptions)
+			// This method initializes the web component by attaching it to a DOM element.
+			// This method gets triggered only when the instance is called by the consumer as myInstance(<domElement>).
+			// This is generally only called once for the whole lifecycle of the component's instance.
+
+			// This is where DOM operations should be performed for the static parts of the document that do not change throughout its lifecycle.
 	init(domNode, state) {
 		// Wipe DOM
 		domNode.innerHTML = '';
@@ -118,6 +139,32 @@ export default Kapsule({
 		scene.add(new THREE.AmbientLight(0xbbbbbb));
 		scene.add(new THREE.DirectionalLight(0xffffff, 0.6));
 
+		// Collada Loader lights
+		var daePosition = {
+			x: 0.4,
+			y: 0,
+			z: 0.8
+		};
+
+		var dae,
+				loader = new THREE.ColladaLoader();
+
+		 var ambientLight  = new THREE.AmbientLight( 0xcccccc, 0.4 );
+		 scene.add( ambientLight );
+
+		 var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+		 directionalLight.position.set( daePosition.x, daePosition.y, daePosition.z ).normalize();
+		 scene.add( directionalLight );
+
+		 function loadCollada( collada ) {
+				 dae = collada.scene;
+				 dae.position.set(daePosition.x, daePosition.y, daePosition.z);
+				 scene.add(dae);
+		 }
+
+		 loader.options.convertUpAxis = true;
+		 loader.load( '../../../models/elf/elf.dae', loadCollada);
+
 		// Setup camera
 		state.camera = new THREE.PerspectiveCamera();
 		state.camera.far = 20000;
@@ -151,6 +198,9 @@ export default Kapsule({
 		})();
 	},
 
+	// update(state)
+			// This method is triggered once right after the init method finishes, and afterwards whenever a prop changes.
+			// This method should contain the DOM operations for the dynamic parts of the document that change according to the component props.
 	update: function updateFn(state) {
 		resizeCanvas();
 
