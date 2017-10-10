@@ -15512,8 +15512,6 @@ var Kapsule = function (_ref2) {
 var ngraph = { graph: index$1, forcelayout: index$4, forcelayout3d: index$17 };
 
 // A Simple Web Component library, inspired by the reusable charts pattern commonly found in D3 components.
-//
-
 var CAMERA_DISTANCE2NODES_FACTOR = 150;
 
 // The config object passed to Kapsule supports 5 properties: props, methods, stateInit, init and update.
@@ -15639,31 +15637,28 @@ var _3dForceGraph = Kapsule({
 		scene.add(new THREE.AmbientLight(0xbbbbbb));
 		scene.add(new THREE.DirectionalLight(0xffffff, 0.6));
 
-		// Collada Loader lights
-		var daePosition = {
-			x: 0.4,
-			y: 0,
-			z: 0.8
-		};
-
-		var dae,
-		    loader = new THREE.ColladaLoader();
-
-		var ambientLight = new THREE.AmbientLight(0xcccccc, 0.4);
-		scene.add(ambientLight);
-
-		var directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-		directionalLight.position.set(daePosition.x, daePosition.y, daePosition.z).normalize();
-		scene.add(directionalLight);
-
-		function loadCollada(collada) {
-			dae = collada.scene;
-			dae.position.set(daePosition.x, daePosition.y, daePosition.z);
-			scene.add(dae);
-		}
-
-		loader.options.convertUpAxis = true;
-		loader.load('../../../models/elf/elf.dae', loadCollada);
+		// Load Collada model
+		/*
+  var daePosition = {
+  	x: 0.4,
+  	y: 0,
+  	z: 0.8
+  };
+  	var dae,
+  		loader = new THREE.ColladaLoader();
+  	var ambientLight  = new THREE.AmbientLight( 0xcccccc, 0.4 );
+  scene.add( ambientLight );
+  	var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+  directionalLight.position.set( daePosition.x, daePosition.y, daePosition.z ).normalize();
+  scene.add( directionalLight );
+  	loader.options.convertUpAxis = true;
+  loader.load( '../../../models/elf/elf.dae', loadCollada);
+  	function loadCollada( collada ) {
+  	dae = collada.scene;
+  	dae.position.set(daePosition.x, daePosition.y, daePosition.z);
+  	scene.add(dae);
+  }
+  */
 
 		// Setup camera
 		state.camera = new THREE.PerspectiveCamera();
@@ -15675,6 +15670,8 @@ var _3dForceGraph = Kapsule({
 		// Add D3 force-directed layout
 		state.d3ForceLayout = _default().force('link', link()).force('charge', manyBody()).force('center', center()).stop();
 
+		console.log("momo debug: Add D3 force-directed layout. state.d3ForceLayout is", state.d3ForceLayout);
+		console.log("momo debug: Add D3 force-directed layout. state.graphScene.children is", state.graphScene.children); // [ ]
 		//
 
 		// Kick-off renderer
@@ -15729,31 +15726,57 @@ var _3dForceGraph = Kapsule({
 			link.target = link[state.linkTargetField];
 		});
 
+		console.log("momo debug: BEFORE ADD WebGL OBJECTS. state.graphScene.children is", state.graphScene.children); // [ ]
 		// Add WebGL objects
 		while (state.graphScene.children.length) {
 			state.graphScene.remove(state.graphScene.children[0]);
 		} // Clear the place
+		console.log("momo debug: WHILE ADD WebGL OBJECTS. state.graphScene.children is", state.graphScene.children); // [ ]
 
-		var sphereGeometries = {}; // indexed by node value
-		var sphereMaterials = {}; // indexed by color
-		state.graphData.nodes.forEach(function (node) {
-			var val = node[state.valField] || 1;
-			if (!sphereGeometries.hasOwnProperty(val)) {
-				sphereGeometries[val] = new THREE.SphereGeometry(Math.cbrt(val) * state.nodeRelSize, state.nodeResolution, state.nodeResolution);
-			}
-
-			var color = node[state.colorField] || 0xffffaa;
-			if (!sphereMaterials.hasOwnProperty(color)) {
-				sphereMaterials[color] = new THREE.MeshLambertMaterial({ color: color, transparent: true, opacity: 0.75 });
-			}
-
-			var sphere = new THREE.Mesh(sphereGeometries[val], sphereMaterials[color]);
-
-			sphere.name = node[state.nameField]; // Add label
-			sphere.__data = node; // Attach node data
-
-			state.graphScene.add(node.__sphere = sphere);
-		});
+		console.log("momo debug: BEFORE FOR EACH ADD WebGL OBJECTS. state.graphScene is", state.graphScene);
+		/*
+  state.graphData.nodes.forEach(node => {
+  					console.log("momo debug: ADD WebGL OBJECTS. node is", node);
+  					console.log("momo debug: ADD WebGL OBJECTS. node[state.valField] is", node[state.valField]);
+  					console.log("momo debug: ADD WebGL OBJECTS. node.vx is", node.vx);	// undefined
+  					console.log("momo debug: ADD WebGL OBJECTS. node.vy is", node.vy);	// undefined
+  					console.log("momo debug: ADD WebGL OBJECTS. node.vz is", node.vz);	// undefined
+  					console.log("momo debug: ADD WebGL OBJECTS. node.x is", node.x);		// undefined
+  					console.log("momo debug: ADD WebGL OBJECTS. node.y is", node.y);		// undefined
+  					console.log("momo debug: ADD WebGL OBJECTS. node.z is", node.z);		// undefined
+  	const val = node[state.valField] || 1;
+  					console.log("momo debug: ADD WebGL OBJECTS. val is", val);
+  	if (!sphereGeometries.hasOwnProperty(val)) {
+  		sphereGeometries[val] = new THREE.SphereGeometry(Math.cbrt(val) * state.nodeRelSize, state.nodeResolution, state.nodeResolution);
+   					console.log("momo debug: ADD WebGL OBJECTS. sphereGeometries[val] is", sphereGeometries[val]);
+  	}
+  		const color = node[state.colorField] || 0xffffaa;
+  	if (!sphereMaterials.hasOwnProperty(color)) {
+  		sphereMaterials[color] = new THREE.MeshLambertMaterial({ color, transparent: true, opacity: 0.75 });
+   					console.log("momo debug: ADD WebGL OBJECTS. sphereMaterials[color] is", sphereMaterials[color]);
+  	}
+  		const sphere = new THREE.Mesh(sphereGeometries[val], sphereMaterials[color]);
+   					console.log("momo debug: ADD WebGL OBJECTS. sphere is", sphere);
+  					console.log("momo debug: ADD WebGL OBJECTS. sphere.position.x is", sphere.position.x);	// 0
+  					console.log("momo debug: ADD WebGL OBJECTS. sphere.position.y is", sphere.position.y);	// 0
+  					console.log("momo debug: ADD WebGL OBJECTS. sphere.position.z is", sphere.position.z);	// 0
+  	sphere.name = node[state.nameField]; // Add label
+   					console.log("momo debug: ADD WebGL OBJECTS. sphere.name is", sphere.name);
+  	sphere.__data = node; // Attach node data
+   					console.log("momo debug: ADD WebGL OBJECTS. sphere.__data is", sphere.__data);
+  	console.log("momo debug: ADD WebGL OBJECTS. sphere.__data.vx is", sphere.__data.vx);
+  	console.log("momo debug: ADD WebGL OBJECTS. sphere.__data.vy is", sphere.__data.vy);
+  	console.log("momo debug: ADD WebGL OBJECTS. sphere.__data.vz is", sphere.__data.vz);
+  	console.log("momo debug: ADD WebGL OBJECTS. sphere.__data.x is", sphere.__data.x);
+  	console.log("momo debug: ADD WebGL OBJECTS. sphere.__data.y is", sphere.__data.y);
+  	console.log("momo debug: ADD WebGL OBJECTS. sphere.__data.z is", sphere.__data.z);
+  						console.log("momo debug: ADD WebGL OBJECTS - BEFORE FIRST state.graphScene.add. state.graphScene is", state.graphScene);	// 0
+  	state.graphScene.add(node.__sphere = sphere);
+  					console.log("momo debug: ADD WebGL OBJECTS. state.graphScene.children is", state.graphScene.children);	// 0
+  });
+  					console.log("momo debug: AFTER FOR EACH ADD WebGL OBJECTS. state.graphScene.children is", state.graphScene.children);
+  					console.log("momo debug: AFTER FOR EACH ADD WebGL OBJECTS. state.graphScene is", state.graphScene);
+  */
 
 		var lineMaterial = new THREE.LineBasicMaterial({ color: 0xf0f0f0, transparent: true, opacity: state.lineOpacity });
 		state.graphData.links.forEach(function (link) {
@@ -15764,7 +15787,10 @@ var _3dForceGraph = Kapsule({
 			line.renderOrder = 10; // Prevent visual glitches of dark lines on top of spheres by rendering them last
 
 			state.graphScene.add(link.__line = line);
+			// console.log("momo debug: ADD WebGL OBJECTS - LINES. state.graphScene.children is", state.graphScene.children);
 		});
+		// console.log("momo debug: AFTER FOR EACH ADD WebGL OBJECTS - LINES. state.graphScene.children is", state.graphScene.children);
+		// console.log("momo debug: AFTER FOR EACH ADD WebGL OBJECTS - LINES. state.graphScene is", state.graphScene);
 
 		if (state.camera.position.x === 0 && state.camera.position.y === 0) {
 			// If camera still in default position (not user modified)
@@ -15776,11 +15802,13 @@ var _3dForceGraph = Kapsule({
 		var isD3Sim = state.forceEngine !== 'ngraph';
 		var layout = void 0;
 		if (isD3Sim) {
+			// console.log("momo debug: Feed data to force-directed layout - layout is", layout);
 			// D3-force
 			(layout = state.d3ForceLayout).stop().alpha(1) // re-heat the simulation
 			.numDimensions(state.numDimensions).nodes(state.graphData.nodes).force('link').id(function (d) {
 				return d[state.idField];
 			}).links(state.graphData.links);
+			// state.graphData.nodes.forEach(node => { console.log("momo debug: Feed data to force-directed layout FOR EACH - node is", node); });
 		} else {
 			// ngraph
 			var _graph = ngraph.graph();
@@ -15814,23 +15842,33 @@ var _3dForceGraph = Kapsule({
 		}
 
 		function layoutTick() {
+			console.log("momo debug: CALLED layoutTick()");
 			if (cntTicks++ > state.cooldownTicks || new Date() - startTickTime > state.cooldownTime) {
 				state.onFrame = null; // Stop ticking graph
 			}
 
 			layout[isD3Sim ? 'tick' : 'step'](); // Tick it
-
-			// Update nodes position
-			state.graphData.nodes.forEach(function (node) {
-				var sphere = node.__sphere;
-				if (!sphere) return;
-
-				var pos = isD3Sim ? node : layout.getNodePosition(node[state.idField]);
-
-				sphere.position.x = pos.x;
-				sphere.position.y = pos.y || 0;
-				sphere.position.z = pos.z || 0;
-			});
+			console.log("momo debug: CALLED layoutTick() - layout is", layout);
+			console.log("momo debug: CALLED layoutTick() - cntTicks is", cntTicks);
+			/*
+   // Update nodes position
+   state.graphData.nodes.forEach(node => {
+   	const sphere = node.__sphere;
+   				// console.log("momo debug: UPDATE POSITION - BEFORE SET NEW POSITION. sphere is", node.__sphere);
+   				// console.log("momo debug: UPDATE POSITION - BEFORE SET NEW POSITION. sphere.position.x is", node.__sphere.position.x);
+   				// console.log("momo debug: UPDATE POSITION - BEFORE SET NEW POSITION. sphere.position.y is", node.__sphere.position.y);
+   				// console.log("momo debug: UPDATE POSITION - BEFORE SET NEW POSITION. sphere.position.z is", node.__sphere.position.z);
+   	if (!sphere) return;
+   		const pos = isD3Sim ? node : layout.getNodePosition(node[state.idField]);
+   				// console.log("momo debug: UPDATE POSITION. node - pos is", pos);
+   		sphere.position.x = pos.x;
+   				// console.log("momo debug: UPDATE POSITION - AFTER SET NEW POSITION. sphere.position.x is", node.__sphere.position.x);
+   	sphere.position.y = pos.y || 0;
+   				// console.log("momo debug: UPDATE POSITION - AFTER SET NEW POSITION. sphere.position.y is", node.__sphere.position.y);
+   	sphere.position.z = pos.z || 0;
+   				// console.log("momo debug: UPDATE POSITION - AFTER SET NEW POSITION. sphere.position.z is", node.__sphere.position.z);
+   });
+   */
 
 			// Update links position
 			state.graphData.links.forEach(function (link) {

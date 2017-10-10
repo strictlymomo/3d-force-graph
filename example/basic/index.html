@@ -10,7 +10,7 @@
 
     <script>
         // Random tree
-        const N = 300;
+        const N = 10000;
         const gData = {
             nodes: [...Array(N).keys()].map(i => ({ id: i })),
             links: [...Array(N).keys()]
@@ -24,5 +24,6 @@
         const Graph = ForceGraph3D()
             (document.getElementById('3d-graph'))
                 .graphData(gData);
+
     </script>
 </body>
