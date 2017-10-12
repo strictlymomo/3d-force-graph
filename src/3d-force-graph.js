@@ -22,6 +22,7 @@ const CAMERA_DISTANCE2NODES_FACTOR = 150;
 export default Kapsule({
 
 	// props: { propName: propConfig, ... }
+
 			// Each registered prop inside props will declare its own getter/setter method in the component's instance state.
 			// This method will have the signature: myInstance.propName([propVal]).
 
@@ -54,7 +55,8 @@ export default Kapsule({
 		forceEngine: { default: 'd3' }, 					// Getter/setter for which force-simulation engine to use (d3 or ngraph).
 		warmupTicks: { default: 0 }, 							// Getter/setter for number of layout engine cycles to dry-run at ignition before starting to render. how many times to tick the force engine at init before starting to render
 		cooldownTicks: { default: Infinity },			// Getter/setter for how many build-in frames to render before stopping and freezing the layout engine.
-		cooldownTime: { default: 15000 } 					// Getter/setter for how long (ms) to render for before stopping and freezing the layout engine.
+		cooldownTime: { default: 15000 }, 					// Getter/setter for how long (ms) to render for before stopping and freezing the layout engine.
+		modelURL: { default: '../../../models/elf/elf.dae'}
 	},
 
 
@@ -136,34 +138,6 @@ export default Kapsule({
 		scene.add(new THREE.AmbientLight(0xbbbbbb));
 		scene.add(new THREE.DirectionalLight(0xffffff, 0.6));
 
-		// Load Collada model
-		/*
-		var daePosition = {
-			x: 0.4,
-			y: 0,
-			z: 0.8
-		};
-
-		var dae,
-				loader = new THREE.ColladaLoader();
-
-		var ambientLight  = new THREE.AmbientLight( 0xcccccc, 0.4 );
-		scene.add( ambientLight );
-
-		var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
-		directionalLight.position.set( daePosition.x, daePosition.y, daePosition.z ).normalize();
-		scene.add( directionalLight );
-
-		loader.options.convertUpAxis = true;
-		loader.load( '../../../models/elf/elf.dae', loadCollada);
-
-		function loadCollada( collada ) {
-			dae = collada.scene;
-			dae.position.set(daePosition.x, daePosition.y, daePosition.z);
-			scene.add(dae);
-		}
-		*/
-
 		// Setup camera
 		state.camera = new THREE.PerspectiveCamera();
 		state.camera.far = 20000;
@@ -236,24 +210,12 @@ export default Kapsule({
 		while (state.graphScene.children.length) { state.graphScene.remove(state.graphScene.children[0]) } // Clear the place
 							// console.log("momo debug: WHILE ADD WebGL OBJECTS. state.graphScene.children is", state.graphScene.children);	// [ ]
 
+		/*
 		let sphereGeometries = {}; // indexed by node value
 		let sphereMaterials = {}; // indexed by color
 
-
-		// var dae,
-		// 		loader = new THREE.ColladaLoader();
-
-		// function loadCollada( collada ) {
-		// 	dae = collada.scene;
-		// 	dae.position.set(daePosition.x, daePosition.y, daePosition.z);
-		// 	scene.add(dae);
-		// }
-
-		// loader.options.convertUpAxis = true;
-		// loader.load( '../../../models/elf/elf.dae', loadCollada);
-
 							// console.log("momo debug: BEFORE FOR EACH ADD WebGL OBJECTS. state.graphScene is", state.graphScene);
-		/*
+
 		state.graphData.nodes.forEach(node => {
 							console.log("momo debug: ADD WebGL OBJECTS. node is", node);
 							console.log("momo debug: ADD WebGL OBJECTS. node[state.valField] is", node[state.valField]);
@@ -299,6 +261,80 @@ export default Kapsule({
 							console.log("momo debug: AFTER FOR EACH ADD WebGL OBJECTS. state.graphScene.children is", state.graphScene.children);
 							console.log("momo debug: AFTER FOR EACH ADD WebGL OBJECTS. state.graphScene is", state.graphScene);
 		*/
+
+		// Add collada model
+		var dae;
+		var loader = new THREE.ColladaLoader();
+
+		loader.options.convertUpAxis = true;
+		loader.load( state.modelURL, loadCollada);
+
+		function loadCollada( collada ) {
+			dae = collada.scene;
+			state.referenceModel = collada.scene.children[0].children[0];
+			console.log(state.referenceModel);
+			instantiateColladas();
+		}
+
+		function instantiateColladas() {
+			state.graphData.nodes.forEach(node => {
+
+				var refObject = state.referenceModel;
+				console.log('loading collada instances.  state.referenceModel is:', refObject);
+				var clone = new THREE.Mesh( refObject.geometry, refObject.material );
+				clone.name = node[state.nameField]; // Add label
+				clone.__data = node; // Attach node data
+				clone.position.set(node.x, node.y, node.z);
+				clone.rotation.x = Math.PI / 2;
+
+				// here you can apply transformations, for this clone only
+				state.graphScene.add( node.__clone = clone );
+
+				// var dae;
+				// var loader = new THREE.ColladaLoader();
+				//
+				// loader.name = node[state.nameField]; // Add label
+				// loader.__data = node; // Attach node data
+				// loader.options.convertUpAxis = true;
+				// loader.load( '../../../models/elf/elf.dae', loadCollada);
+				//
+				// function loadCollada( collada ) {
+				// 	dae = collada.scene;
+				// 	dae.position.set(node.x, node.y, node.z);
+				// 	state.graphScene.add(node.__loader = dae);
+				// 	console.log(dae);
+				// }
+			});
+		}
+
+		// state.graphData.nodes.forEach(node => {
+			// node.__loader = null;
+
+			// var refObject = state.referenceModel;
+			// console.log('loading collada instances.  state.referenceModel is:', refObject);
+			// var clone = new THREE.Mesh( refObject.geometry, refObject.material );
+			// clone.name = node[state.nameField]; // Add label
+			// clone.__data = node; // Attach node data
+			// clone.position.set(node.x, node.y, node.z);
+
+			// here you can apply transformations, for this clone only
+			// state.graphScene.add( node.__clone = clone );
+
+			// var dae;
+			// var loader = new THREE.ColladaLoader();
+      //
+			// loader.name = node[state.nameField]; // Add label
+			// loader.__data = node; // Attach node data
+			// loader.options.convertUpAxis = true;
+			// loader.load( '../../../models/elf/elf.dae', loadCollada);
+      //
+			// function loadCollada( collada ) {
+			// 	dae = collada.scene;
+			// 	dae.position.set(node.x, node.y, node.z);
+			// 	state.graphScene.add(node.__loader = dae);
+			// 	console.log(dae);
+			// }
+		// });
 
 		const lineMaterial = new THREE.LineBasicMaterial({ color: 0xf0f0f0, transparent: true, opacity: state.lineOpacity });
 		state.graphData.links.forEach(link => {
@@ -370,6 +406,28 @@ export default Kapsule({
 			layout[isD3Sim?'tick':'step'](); // Tick it
 							// console.log("momo debug: CALLED layoutTick() - layout is", layout);
 							// console.log("momo debug: CALLED layoutTick() - cntTicks is", cntTicks);
+
+			 // Update nodes position
+			 state.graphData.nodes.forEach(node => {
+				 const clone = node.__clone;
+				 // console.log("momo debug: UPDATE POSITION - BEFORE SET NEW POSITION. sphere is", node.__sphere);
+				 // console.log("momo debug: UPDATE POSITION - BEFORE SET NEW POSITION. sphere.position.x is", node.__sphere.position.x);
+				 // console.log("momo debug: UPDATE POSITION - BEFORE SET NEW POSITION. sphere.position.y is", node.__sphere.position.y);
+				 // console.log("momo debug: UPDATE POSITION - BEFORE SET NEW POSITION. sphere.position.z is", node.__sphere.position.z);
+				 if (!clone) return;
+
+				 const pos = isD3Sim ? node : layout.getNodePosition(node[state.idField]);
+				 // console.log("momo debug: UPDATE POSITION. node - pos is", pos);
+
+				 clone.position.x = pos.x;
+				 // console.log("momo debug: UPDATE POSITION - AFTER SET NEW POSITION. sphere.position.x is", node.__sphere.position.x);
+				 clone.position.y = pos.y || 0;
+				 // console.log("momo debug: UPDATE POSITION - AFTER SET NEW POSITION. sphere.position.y is", node.__sphere.position.y);
+				 clone.position.z = pos.z || 0;
+				 // console.log("momo debug: UPDATE POSITION - AFTER SET NEW POSITION. sphere.position.z is", node.__sphere.position.z);
+			 });
+
+
 			/*
 			// Update nodes position
 			state.graphData.nodes.forEach(node => {
