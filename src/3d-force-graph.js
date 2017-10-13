@@ -287,54 +287,9 @@ export default Kapsule({
 				clone.position.set(node.x, node.y, node.z);
 				clone.rotation.x = Math.PI / 2;
 
-				// here you can apply transformations, for this clone only
 				state.graphScene.add( node.__clone = clone );
-
-				// var dae;
-				// var loader = new THREE.ColladaLoader();
-				//
-				// loader.name = node[state.nameField]; // Add label
-				// loader.__data = node; // Attach node data
-				// loader.options.convertUpAxis = true;
-				// loader.load( '../../../models/elf/elf.dae', loadCollada);
-				//
-				// function loadCollada( collada ) {
-				// 	dae = collada.scene;
-				// 	dae.position.set(node.x, node.y, node.z);
-				// 	state.graphScene.add(node.__loader = dae);
-				// 	console.log(dae);
-				// }
 			});
 		}
-
-		// state.graphData.nodes.forEach(node => {
-			// node.__loader = null;
-
-			// var refObject = state.referenceModel;
-			// console.log('loading collada instances.  state.referenceModel is:', refObject);
-			// var clone = new THREE.Mesh( refObject.geometry, refObject.material );
-			// clone.name = node[state.nameField]; // Add label
-			// clone.__data = node; // Attach node data
-			// clone.position.set(node.x, node.y, node.z);
-
-			// here you can apply transformations, for this clone only
-			// state.graphScene.add( node.__clone = clone );
-
-			// var dae;
-			// var loader = new THREE.ColladaLoader();
-      //
-			// loader.name = node[state.nameField]; // Add label
-			// loader.__data = node; // Attach node data
-			// loader.options.convertUpAxis = true;
-			// loader.load( '../../../models/elf/elf.dae', loadCollada);
-      //
-			// function loadCollada( collada ) {
-			// 	dae = collada.scene;
-			// 	dae.position.set(node.x, node.y, node.z);
-			// 	state.graphScene.add(node.__loader = dae);
-			// 	console.log(dae);
-			// }
-		// });
 
 		const lineMaterial = new THREE.LineBasicMaterial({ color: 0xf0f0f0, transparent: true, opacity: state.lineOpacity });
 		state.graphData.links.forEach(link => {
