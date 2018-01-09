@@ -16,7 +16,7 @@
             links: [...Array(N).keys()]
                 .filter(id => id)
                 .map(id => ({
-                    source: Math.floor( Math.pow(id,1/1.62) ),
+                    source: Math.floor( Math.pow(id,1) ),
                     target: id + 1
                 }))
         }
